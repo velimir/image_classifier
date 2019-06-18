@@ -2,7 +2,6 @@ defmodule ImageClassifier do
   @moduledoc """
   TODO: write documentation for ImageClassifier.
   """
-
   @doc """
   TODO: write docs
 
@@ -13,14 +12,30 @@ defmodule ImageClassifier do
 
   """
   def label(image) do
-    labels = read_labels()
+    label(
+      image,
+      app_file("retrained_graph.pb"),
+      app_file("retrained_labels.txt")
+    )
+  end
 
+  def label(image, graph_path, labels) when is_binary(graph_path) do
+    {:ok, graph} = Tensorflex.read_graph(graph_path)
+    label(image, graph, labels)
+  end
+
+  def label(image, graph, labels_path) when is_binary(labels_path) do
+    labels = read_labels(labels_path)
+    label(image, graph, labels)
+  end
+
+  def label(image, graph, labels) do
     image
-    |> classify_image(labels)
+    |> classify_image(graph, labels)
     |> find_label(labels)
   end
 
-  defp classify_image(image, labels) do
+  defp classify_image(image, graph, labels) do
     {:ok, decoded, properties} = Jaypeg.decode(image)
     in_width = properties[:width]
     in_height = properties[:height]
@@ -39,8 +54,6 @@ defmodule ImageClassifier do
       Tensorflex.create_matrix(1, 2, [[length(labels), 1]])
       |> Tensorflex.float32_tensor_alloc()
 
-    {:ok, graph} = read_graph()
-
     Tensorflex.run_session(
       graph,
       input_tensor,
@@ -56,12 +69,8 @@ defmodule ImageClassifier do
     |> Enum.max()
   end
 
-  defp read_graph do
-    app_file("retrained_graph.pb") |> Tensorflex.read_graph()
-  end
-
-  defp read_labels do
-    app_file("retrained_labels.txt")
+  defp read_labels(path) do
+    path
     |> File.read!()
     |> String.split("\n", trim: true)
   end
