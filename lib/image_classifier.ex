@@ -1,14 +1,15 @@
 defmodule ImageClassifier do
   @moduledoc """
-  TODO: write documentation for ImageClassifier.
+  Image classification using Tensorflow.
   """
+
   @doc """
-  TODO: write docs
+  Returns the most probable label along with an accuracy for a given image.
 
   ## Examples
 
-  iex> ImageClassifier.hello()
-  :world
+  iex> ImageClassifier.label(File.read!("file/t54wjgedk1kd3d8s.jpg"))
+  {0.49980872869491577, "tvs"}
 
   """
   def label(image) do
@@ -19,6 +20,24 @@ defmodule ImageClassifier do
     )
   end
 
+  @doc """
+  Returns the most probable label along with an accuracy for a given image.
+
+  ## Example
+
+  iex(1)> image = File.read!("tv.jpeg")
+  <<255, 216, 255, 224, 0, 16, 74, 70, 73, 70, 0, ...>>>
+  iex(2)> {:ok, graph} = Tensorflex.read_graph("retrained_graph.pb")
+  {:ok,
+   %Tensorflex.Graph{
+     def: #Reference<0.1322660680.104464391.77632>,
+     name: "retrained_graph.pb"
+   }}
+  iex(3)> labels = ImageClassifier.read_labels("retrained_labels.txt")
+  ["headphones", "hi fi audio speakers", "tools", "tv audio accessories", "tvs"]
+  iex(4)> ImageClassifier.label(image, graph, labels)
+  {0.9993681311607361, "tvs"}
+  """
   def label(image, graph_path, labels) when is_binary(graph_path) do
     {:ok, graph} = Tensorflex.read_graph(graph_path)
     label(image, graph, labels)
@@ -35,7 +54,22 @@ defmodule ImageClassifier do
     |> find_label(labels)
   end
 
-  defp classify_image(image, graph, labels) do
+  @doc """
+  Read all labels separated by a new line from a given file.
+
+  ## Examples
+
+  iex> ImageClassifier.read_labels("dir/retrained_labels.txt")
+  ["headphones", "hi fi audio speakers", "tools", "tv audio accessories", "tvs"]
+
+  """
+  def read_labels(path) do
+    path
+    |> File.read!()
+    |> String.split("\n", trim: true)
+  end
+
+  def classify_image(image, graph, labels) do
     {:ok, decoded, properties} = Jaypeg.decode(image)
     in_width = properties[:width]
     in_height = properties[:height]
@@ -67,12 +101,6 @@ defmodule ImageClassifier do
     List.flatten(probes)
     |> Enum.zip(labels)
     |> Enum.max()
-  end
-
-  defp read_labels(path) do
-    path
-    |> File.read!()
-    |> String.split("\n", trim: true)
   end
 
   defp app_file(name) do
