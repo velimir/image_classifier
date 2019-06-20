@@ -26,12 +26,12 @@ defmodule ImageClassifier.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:imgutils, git: "git@github.com:velimir/imgutils.git", branch: "master"},
-      {:jaypeg, git: "git@github.com:velimir/jaypeg.git", branch: "master"},
+      {:imgutils, "~> 0.1.1"},
+      {:jaypeg, "~> 0.1.0"},
       {:tensorflex,
        git: "git@github.com:velimir/tensorflex.git", branch: "matrix-ext"},
       {:elixir_make, "~> 0.5.2", runtime: false},
-      {:ex_doc, "~> 0.20.2", runtime: false}
+      {:ex_doc, "~> 0.20.2", only: :dev, runtime: false}
     ]
   end
 end
